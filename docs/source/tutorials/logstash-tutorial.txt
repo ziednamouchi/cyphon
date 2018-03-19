@@ -18,6 +18,8 @@ Suppose we want to surface a Snort alert in Cyphon::
     [Classification: Attempted Information Leak] [Priority: 2]: 
     {ICMP} 10.120.66.1:21 -> 10.22.33.106:21
 
+In order to get the same output format, we recommend the `alert_fast output plugin <http://manual-snort-org.s3-website-us-east-1.amazonaws.com/node21.html>`.
+
 We want the parsed message to look like this::
 
     {
@@ -113,7 +115,9 @@ The first filter will:
 
             # parse the message into individual fields
             grok {
-                match => { "message" => "(?<ts>.*\d{2}:\d{2}:\d{2})\s(?<host>.*?)\s.*?\s\[(?<generator_id>.*?)::(?<signature_id>.*?):.*?\]\s(?<signature>.*?)\s\[Classification:\s(?<classification>.*?)\]\s\[Priority:\s(?<priority>.*?)\].*?{(?<protocol>.*?)\}\s(?<source_ip>.*?):(?<source_port>.*?)\s-\>\s(?<destination_ip>.*?):(?<destination_port>.*)" }
+                 match => { "message" => "^%{DATA:sys_timestamp}\s+\[\*\*\]\s+\[%{INT:generator_id}:%{INT:signature_id}:%{INT:rid}\]\s+%{DATA:alert}\s\[\*\*\]\s+\[Classification:\s+%{DATA:classification}\]\s+\[Priority:\s+%{INT:priority}\]\s+\{%{DATA:protocol}\}\s+%{IP:source_ip}:%{INT:source_port}\s+->\s+%{IP:destination_ip}:%{INT:destination_port}" }
+               # in case the port source and destination are missing  
+              match => { "message" => "^%{DATA:sys_timestamp}\s+\[\*\*\]\s+\[%{INT:generator_id}:%{INT:signature_id}:%{INT:rid}\]\s+%{DATA:alert}\s\[\*\*\]\s+\[Classification:\s+%{DATA:classification}\]\s+\[Priority:\s+%{INT:priority}\]\s+\{%{DATA:protocol}\}\s+%{IP:source_ip}\s+->\s+%{IP:destination_ip}" }
             }
 
             # remove the original message if parsing was successful
